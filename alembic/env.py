@@ -60,8 +60,17 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
+    # Convert async driver URL to sync so Alembic can run migrations
+    # synchronously while the main app continues to use asyncpg.
+    database_url = settings.database_url
+    if "+asyncpg" in database_url:
+        database_url = database_url.replace("+asyncpg", "")
+
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = database_url
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
