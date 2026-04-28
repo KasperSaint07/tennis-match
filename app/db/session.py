@@ -8,9 +8,11 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-# Normalize URL — Railway provides postgresql://, asyncpg requires postgresql+asyncpg://
+# Normalize URL — Railway may provide postgres:// or postgresql://, asyncpg needs postgresql+asyncpg://
 _db_url = settings.database_url
-if _db_url.startswith("postgresql://"):
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif _db_url.startswith("postgresql://"):
     _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 # Create async engine

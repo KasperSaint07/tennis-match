@@ -23,8 +23,9 @@ target_metadata = Base.metadata
 
 def get_url() -> str:
     url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
-    # Alembic needs a sync driver — strip asyncpg in either URL format
+    # Alembic needs a sync driver — normalize all variants to postgresql://
     url = url.replace("postgresql+asyncpg://", "postgresql://")
+    url = url.replace("postgres://", "postgresql://")
     return url
 
 
