@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, User as TelegramUser
+from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -116,7 +116,7 @@ async def create_level(callback_query: CallbackQuery, state: FSMContext) -> None
 
 
 @router.message(CreateGameState.datetime)
-async def create_datetime(message: Message, state: FSMContext, user: TelegramUser) -> None:
+async def create_datetime(message: Message, state: FSMContext) -> None:
     """Handle datetime input."""
     try:
         scheduled_at = datetime.strptime(message.text, "%Y-%m-%d %H:%M")
@@ -169,7 +169,7 @@ async def create_price(message: Message, state: FSMContext) -> None:
 
 
 @router.message(CreateGameState.location)
-async def create_location(message: Message, state: FSMContext, user: TelegramUser) -> None:
+async def create_location(message: Message, state: FSMContext) -> None:
     """Handle location input and confirm."""
     location = message.text.strip()
 

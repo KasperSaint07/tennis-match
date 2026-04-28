@@ -91,7 +91,10 @@ def create_app() -> FastAPI:
             app.state.dp = dp
 
             if settings.webhook_url:
-                webhook_endpoint = f"{settings.webhook_url.rstrip('/')}/webhook/telegram"
+                base = settings.webhook_url.rstrip("/")
+                if not base.startswith("https://"):
+                    base = f"https://{base}"
+                webhook_endpoint = f"{base}/webhook/telegram"
                 await bot.set_webhook(webhook_endpoint)
                 logger.info("Telegram webhook registered: %s", webhook_endpoint)
             else:
