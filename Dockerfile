@@ -18,4 +18,4 @@ COPY . .
 
 # Run migrations and start app
 # Railway sets PORT env var, default to 8000 for local development
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "echo '>>> DATABASE_URL prefix:' && echo $DATABASE_URL | cut -c1-30 && echo '>>> Running alembic...' && alembic upgrade head && echo '>>> Alembic done. Starting uvicorn on port ${PORT:-8000}...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
