@@ -107,9 +107,12 @@ def create_app() -> FastAPI:
             app.state.bot = None
             app.state.dp = None
 
-        from app.tasks.scheduler import setup_scheduler
+        try:
+            from app.tasks.scheduler import setup_scheduler
 
-        setup_scheduler(bot=bot)
+            setup_scheduler(bot=bot)
+        except Exception as exc:
+            logger.error("Scheduler failed to start: %s", exc)
 
     @app.on_event("shutdown")
     async def shutdown():

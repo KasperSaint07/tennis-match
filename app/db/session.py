@@ -30,6 +30,9 @@ async_session = async_sessionmaker(
     expire_on_commit=False,
 )
 
+# Alias used by bot handlers
+AsyncSessionLocal = async_session
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency provider for database session."""
