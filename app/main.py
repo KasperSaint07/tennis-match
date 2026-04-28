@@ -77,26 +77,66 @@ def create_app() -> FastAPI:
         """Health check endpoint."""
         return {"status": "ok"}
 
-    # Scheduler lifecycle
+    # Bot + scheduler lifecycle
     @app.on_event("startup")
-    async def startup_scheduler():
-        from app.tasks.scheduler import setup_scheduler
-
+    async def startup():
         bot = None
+        dp = None
+
         try:
             from app.bot.main import create_bot
 
-            bot, _ = await create_bot()
+            bot, dp = await create_bot()
+            app.state.bot = bot
+            app.state.dp = dp
+
+            if settings.webhook_url:
+                webhook_endpoint = f"{settings.webhook_url.rstrip('/')}/webhook/telegram"
+                await bot.set_webhook(webhook_endpoint)
+                logger.info("Telegram webhook registered: %s", webhook_endpoint)
+            else:
+                # Fallback: delete any stale webhook so polling works in dev
+                await bot.delete_webhook(drop_pending_updates=True)
+                logger.info("No WEBHOOK_URL set — webhook cleared (use bot_runner.py for local polling)")
+
         except Exception as exc:
-            logger.warning("Bot unavailable for scheduler notifications: %s", exc)
+            logger.warning("Bot unavailable: %s", exc)
+            app.state.bot = None
+            app.state.dp = None
+
+        from app.tasks.scheduler import setup_scheduler
 
         setup_scheduler(bot=bot)
 
     @app.on_event("shutdown")
-    async def shutdown_scheduler():
+    async def shutdown():
+        bot = getattr(app.state, "bot", None)
+        if bot is not None:
+            try:
+                if settings.webhook_url:
+                    await bot.delete_webhook()
+                await bot.session.close()
+            except Exception as exc:
+                logger.warning("Error closing bot session: %s", exc)
+
         from app.tasks.scheduler import shutdown_scheduler
 
         shutdown_scheduler()
+
+    # Telegram webhook endpoint
+    @app.post("/webhook/telegram")
+    async def telegram_webhook(request: Request):
+        bot = getattr(app.state, "bot", None)
+        dp = getattr(app.state, "dp", None)
+        if bot is None or dp is None:
+            return JSONResponse(status_code=503, content={"ok": False, "error": "bot not initialised"})
+
+        from aiogram.types import Update
+
+        body = await request.json()
+        update = Update.model_validate(body)
+        await dp.feed_update(bot, update)
+        return {"ok": True}
 
     # Include API routers
     from app.api.v1 import router as api_v1_router

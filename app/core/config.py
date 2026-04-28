@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # Telegram Auth
     telegram_secret_key: str = ""  # Set in production
 
+    # Webhook (set in production; leave empty for local polling)
+    webhook_url: str = ""
+
 
 @lru_cache()
 def get_settings() -> Settings:
