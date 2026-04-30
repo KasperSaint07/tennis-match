@@ -3,7 +3,7 @@
 import logging
 from aiogram import Bot
 from aiogram.types import Message, InlineKeyboardMarkup
-from aiogram.errors import TelegramBadRequest, TelegramAPIError
+from aiogram.exceptions import TelegramBadRequest, TelegramAPIError
 
 logger = logging.getLogger(__name__)
 

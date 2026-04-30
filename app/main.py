@@ -139,10 +139,14 @@ def create_app() -> FastAPI:
 
         from aiogram.types import Update
 
-        body = await request.json()
-        update = Update.model_validate(body)
-        await dp.feed_update(bot, update)
-        return {"ok": True}
+        try:
+            body = await request.json()
+            update = Update.model_validate(body)
+            await dp.feed_update(bot, update)
+            return {"ok": True}
+        except Exception as exc:
+            logger.exception("Telegram webhook update processing failed: %s", exc)
+            return {"ok": False, "error": "update processing failed"}
 
     # Include API routers
     from app.api.v1 import router as api_v1_router

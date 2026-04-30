@@ -1,5 +1,7 @@
 from functools import lru_cache
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +37,16 @@ class Settings(BaseSettings):
 
     # Webhook (set in production; leave empty for local polling)
     webhook_url: str = ""
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def parse_debug(cls, value: Any) -> bool:
+        """Accept common environment labels where a boolean is expected."""
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"release", "prod", "production"}:
+                return False
+        return value
 
 
 @lru_cache()

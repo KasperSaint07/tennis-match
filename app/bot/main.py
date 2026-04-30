@@ -3,7 +3,6 @@
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
-from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from app.core.config import get_settings
@@ -18,6 +17,43 @@ from app.bot.handlers import (
 logger = logging.getLogger(__name__)
 
 
+def _create_bot_instance() -> Bot:
+    """Create a Bot instance without making Telegram API calls."""
+    settings = get_settings()
+
+    if not settings.telegram_bot_token:
+        raise ValueError("TELEGRAM_BOT_TOKEN not configured")
+
+    return Bot(
+        token=settings.telegram_bot_token,
+        parse_mode=ParseMode.HTML,
+    )
+
+
+def setup_dispatcher(dispatcher: Dispatcher) -> None:
+    """Register all routers."""
+    dispatcher.include_router(start.router)
+    dispatcher.include_router(games.router)
+    dispatcher.include_router(join.router)
+    dispatcher.include_router(create.router)
+    dispatcher.include_router(wallet.router)
+
+
+def _create_dispatcher() -> Dispatcher:
+    """Create a Dispatcher instance with all routers attached."""
+    dispatcher = Dispatcher()
+    setup_dispatcher(dispatcher)
+    return dispatcher
+
+
+try:
+    bot: Bot | None = _create_bot_instance()
+except ValueError:
+    bot = None
+
+dp: Dispatcher = _create_dispatcher()
+
+
 async def set_commands(bot: Bot) -> None:
     """Set bot commands in menu."""
     commands = [
@@ -27,40 +63,21 @@ async def set_commands(bot: Bot) -> None:
     await bot.set_my_commands(commands)
 
 
-async def setup_dispatcher(dispatcher: Dispatcher) -> None:
-    """Register all routers."""
-    dispatcher.include_router(start.router)
-    dispatcher.include_router(games.router)
-    dispatcher.include_router(join.router)
-    dispatcher.include_router(create.router)
-    dispatcher.include_router(wallet.router)
-
-
 async def create_bot() -> tuple[Bot, Dispatcher]:
     """Create bot and dispatcher instances."""
-    settings = get_settings()
+    global bot, dp
 
-    if not settings.telegram_bot_token:
-        raise ValueError("TELEGRAM_BOT_TOKEN not configured")
+    if bot is None:
+        bot = _create_bot_instance()
 
-    # Create bot
-    bot = Bot(
-        token=settings.telegram_bot_token,
-        default=DefaultBotProperties(
-            parse_mode=ParseMode.HTML,
-        ),
-    )
-
-    # Create dispatcher
-    dispatcher = Dispatcher()
-
-    # Setup
-    await set_commands(bot)
-    await setup_dispatcher(dispatcher)
+    try:
+        await set_commands(bot)
+    except Exception as exc:
+        logger.warning("Failed to set Telegram bot commands: %s", exc)
 
     logger.info("Bot initialized successfully")
 
-    return bot, dispatcher
+    return bot, dp
 
 
 async def start_polling(bot: Bot, dispatcher: Dispatcher) -> None:

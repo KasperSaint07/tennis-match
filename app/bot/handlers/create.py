@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import AsyncSessionLocal
 from app.repositories.user import UserRepository
 from app.enums.game import GameFormat, GameLevel
-from app.services.game import GameService
+from app.bot.deps import build_game_service
 from app.core.exceptions import AppException
 from app.bot.keyboards import get_main_menu_keyboard
 from app.integrations.telegram import send_message, edit_message_text
@@ -232,7 +232,7 @@ async def create_confirm(callback_query: CallbackQuery, state: FSMContext) -> No
     async with AsyncSessionLocal() as session:
         try:
             user_repo = UserRepository(session)
-            game_service = GameService(db=session)
+            game_service = build_game_service(session)
 
             db_user = await user_repo.get_by_telegram_id(telegram_id)
 
@@ -250,7 +250,14 @@ async def create_confirm(callback_query: CallbackQuery, state: FSMContext) -> No
                 price_per_player=Decimal(str(data.get("price"))),
             )
 
-            game = await game_service.create_game(db_user.id, dto)
+            game = await game_service.create_game(
+                user=db_user,
+                location=dto.location,
+                scheduled_at=dto.scheduled_at,
+                format=dto.format,
+                level=dto.level,
+                price_per_player=dto.price_per_player,
+            )
 
             text = (
                 f"✅ <b>Game Created!</b>\n\n"
