@@ -2,13 +2,11 @@
 
 import logging
 from aiogram import Router, F
-from aiogram.types import Message, User as TelegramUser
+from aiogram.types import Message
 from aiogram.filters import Command
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
 from app.repositories.user import UserRepository
-from app.services.auth import AuthService
 from app.core.exceptions import AppException, TelegramVerificationFailedException
 from app.bot.keyboards import get_main_menu_keyboard
 from app.integrations.telegram import send_message
@@ -19,8 +17,9 @@ router = Router()
 
 
 @router.message(Command("start"))
-async def cmd_start(message: Message, user: TelegramUser) -> None:
+async def cmd_start(message: Message) -> None:
     """Handle /start command. Authenticate and show main menu."""
+    user = message.from_user
     telegram_id = user.id
 
     async with AsyncSessionLocal() as session:

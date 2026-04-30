@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, date
 from uuid import UUID
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, User as TelegramUser
+from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
@@ -46,9 +46,10 @@ def _format_game_text(game, current_players: int, max_players: int, is_joined: b
 
 
 @router.callback_query(F.data.startswith("games:list:"))
-async def games_list(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def games_list(callback_query: CallbackQuery) -> None:
     """Browse available games with pagination."""
     offset = int(callback_query.data.split(":")[-1])
+    user = callback_query.from_user
     telegram_id = user.id
 
     async with AsyncSessionLocal() as session:
@@ -110,9 +111,10 @@ async def games_list(callback_query: CallbackQuery, user: TelegramUser) -> None:
 
 
 @router.callback_query(F.data.startswith("game:show:"))
-async def game_show(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def game_show(callback_query: CallbackQuery) -> None:
     """Show game details."""
     game_id = UUID(callback_query.data.split(":")[-1])
+    user = callback_query.from_user
     telegram_id = user.id
 
     async with AsyncSessionLocal() as session:

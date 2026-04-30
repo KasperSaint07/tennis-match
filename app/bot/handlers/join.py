@@ -4,7 +4,7 @@ import logging
 from uuid import UUID
 from decimal import Decimal
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, User as TelegramUser
+from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
@@ -29,9 +29,10 @@ router = Router()
 
 
 @router.callback_query(F.data.startswith("game:join:"))
-async def game_join(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def game_join(callback_query: CallbackQuery) -> None:
     """Handle join game."""
     game_id = UUID(callback_query.data.split(":")[-1])
+    user = callback_query.from_user
     telegram_id = user.id
 
     await callback_query.answer("⏳ Processing...", show_alert=False)
@@ -144,9 +145,10 @@ async def game_join(callback_query: CallbackQuery, user: TelegramUser) -> None:
 
 
 @router.callback_query(F.data.startswith("game:leave:"))
-async def game_leave(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def game_leave(callback_query: CallbackQuery) -> None:
     """Handle leave game."""
     game_id = UUID(callback_query.data.split(":")[-1])
+    user = callback_query.from_user
     telegram_id = user.id
 
     await callback_query.answer("⏳ Processing...", show_alert=False)
@@ -193,9 +195,10 @@ async def game_leave(callback_query: CallbackQuery, user: TelegramUser) -> None:
 
 
 @router.callback_query(F.data.startswith("game:checkin:"))
-async def game_checkin(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def game_checkin(callback_query: CallbackQuery) -> None:
     """Handle check-in."""
     game_id = UUID(callback_query.data.split(":")[-1])
+    user = callback_query.from_user
     telegram_id = user.id
 
     await callback_query.answer("⏳ Processing...", show_alert=False)

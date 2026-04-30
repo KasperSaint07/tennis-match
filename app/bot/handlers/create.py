@@ -224,8 +224,9 @@ async def create_location(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "create:confirm")
-async def create_confirm(callback_query: CallbackQuery, state: FSMContext, user: TelegramUser) -> None:
+async def create_confirm(callback_query: CallbackQuery, state: FSMContext) -> None:
     """Confirm and create game."""
+    user = callback_query.from_user
     telegram_id = user.id
 
     async with AsyncSessionLocal() as session:

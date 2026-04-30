@@ -3,7 +3,7 @@
 import logging
 from decimal import Decimal
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, User as TelegramUser
+from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
@@ -28,8 +28,9 @@ HISTORY_PAGE_SIZE = 5
 
 
 @router.callback_query(F.data == "wallet:show")
-async def wallet_show(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def wallet_show(callback_query: CallbackQuery) -> None:
     """Show wallet balance and quick actions."""
+    user = callback_query.from_user
     telegram_id = user.id
 
     async with AsyncSessionLocal() as session:
@@ -80,7 +81,7 @@ async def wallet_deposit_start(callback_query: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data.startswith("wallet:deposit:"))
-async def wallet_deposit(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def wallet_deposit(callback_query: CallbackQuery) -> None:
     """Handle deposit."""
     try:
         amount = int(callback_query.data.split(":")[-1])
@@ -88,6 +89,7 @@ async def wallet_deposit(callback_query: CallbackQuery, user: TelegramUser) -> N
         await callback_query.answer("❌ Invalid amount", show_alert=True)
         return
 
+    user = callback_query.from_user
     telegram_id = user.id
     await callback_query.answer("⏳ Processing deposit...", show_alert=False)
 
@@ -126,9 +128,10 @@ async def wallet_deposit(callback_query: CallbackQuery, user: TelegramUser) -> N
 
 
 @router.callback_query(F.data.startswith("wallet:history:"))
-async def wallet_history(callback_query: CallbackQuery, user: TelegramUser) -> None:
+async def wallet_history(callback_query: CallbackQuery) -> None:
     """Show transaction history with pagination."""
     offset = int(callback_query.data.split(":")[-1])
+    user = callback_query.from_user
     telegram_id = user.id
 
     async with AsyncSessionLocal() as session:
