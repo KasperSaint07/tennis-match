@@ -45,9 +45,7 @@ async def wallet_show(callback_query: CallbackQuery) -> None:
 
             text = (
                 f"💰 <b>Wallet Balance</b>\n\n"
-                f"💵 Balance: <b>{balance}₸</b>\n\n"
-                f"📊 Total: {wallet.total_deposited}₸ deposited\n"
-                f"📉 Total: {wallet.total_spent}₸ spent"
+                f"💵 Balance: <b>{balance}₸</b>"
             )
 
             await edit_message_text(
@@ -97,16 +95,19 @@ async def wallet_deposit(callback_query: CallbackQuery) -> None:
         try:
             user_repo = UserRepository(session)
             wallet_service = WalletService(db=session)
+            wallet_repo = WalletRepository(session)
 
             db_user = await user_repo.get_by_telegram_id(telegram_id)
 
             # Deposit
             transaction = await wallet_service.deposit(db_user.id, Decimal(amount))
 
+            wallet = await wallet_repo.get_by_user_id(db_user.id)
+
             text = (
                 f"✅ <b>Deposit Successful</b>\n\n"
                 f"💵 Amount: {float(transaction.amount)}₸\n"
-                f"💳 New Balance: {float(transaction.balance_after)}₸"
+                f"💳 New Balance: {float(wallet.balance)}₸"
             )
 
             await edit_message_text(
@@ -157,12 +158,12 @@ async def wallet_history(callback_query: CallbackQuery) -> None:
                 for tx in transactions:
                     date_str = tx.created_at.strftime("%d.%m %H:%M")
                     amount = float(tx.amount)
-                    tx_type = tx.transaction_type.value
-                    balance = float(tx.balance_after)
+                    tx_type = tx.type.value
+                    balance = float(tx.amount)
 
-                    if tx.transaction_type.value == "DEPOSIT":
+                    if tx.type.value == "DEPOSIT":
                         text += f"✅ +{amount}₸ ({tx_type}) - {date_str}\n"
-                    elif tx.transaction_type.value == "REFUND":
+                    elif tx.type.value == "REFUND":
                         text += f"↩️ +{amount}₸ ({tx_type}) - {date_str}\n"
                     else:
                         text += f"❌ -{amount}₸ ({tx_type}) - {date_str}\n"

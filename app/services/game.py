@@ -148,9 +148,6 @@ class GameService:
             if existing:
                 raise GameAlreadyJoinedException()
 
-            if user.level != game.level:
-                raise GameLevelMismatchException()
-
             has_conflict = await self.participant_repo.has_time_conflict(
                 user.id,
                 game.scheduled_at,

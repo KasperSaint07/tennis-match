@@ -5,6 +5,7 @@ from typing import Optional, List
 from uuid import UUID
 
 from sqlalchemy import select, and_, func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums.participant import ParticipantStatus
@@ -33,7 +34,7 @@ class GameParticipantRepository(BaseRepository[GameParticipant]):
     async def get_active(self, game_id: UUID) -> List[GameParticipant]:
         """Get all active participants in a game."""
         result = await self.db.execute(
-            select(GameParticipant).where(
+            select(GameParticipant).options(joinedload(GameParticipant.user)).where(
                 and_(
                     GameParticipant.game_id == game_id,
                     GameParticipant.status == ParticipantStatus.JOINED,

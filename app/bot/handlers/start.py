@@ -7,6 +7,7 @@ from aiogram.filters import Command
 
 from app.db.session import AsyncSessionLocal
 from app.repositories.user import UserRepository
+from app.repositories.wallet import WalletRepository
 from app.core.exceptions import AppException, TelegramVerificationFailedException
 from app.bot.keyboards import get_main_menu_keyboard
 from app.integrations.telegram import send_message
@@ -27,6 +28,19 @@ async def cmd_start(message: Message) -> None:
             # Get or create user
             user_repo = UserRepository(session)
             db_user = await user_repo.get_by_telegram_id(telegram_id)
+
+            if db_user is None:
+                db_user = await user_repo.create(
+                    telegram_id=telegram_id,
+                    name=user.first_name,
+                    level="BEGINNER",
+                )
+
+            # Ensure wallet exists (handles both new and existing users)
+            wallet_repo = WalletRepository(session)
+            await wallet_repo.get_or_create_for_user(db_user.id)
+
+            await session.commit()
 
             # Welcome message
             await send_message(

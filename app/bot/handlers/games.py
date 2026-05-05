@@ -142,7 +142,7 @@ async def game_show(callback_query: CallbackQuery) -> None:
             if participants:
                 text += "\n\n👥 <b>Players:</b>\n"
                 for p in participants:
-                    text += f"• {p.user.first_name or 'User'}\n"
+                    text += f"• {p.user.name or 'User'}\n"
 
             await edit_message_text(
                 callback_query.bot,
