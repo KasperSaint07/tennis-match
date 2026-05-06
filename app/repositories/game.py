@@ -54,7 +54,7 @@ class GameRepository(BaseRepository[Game]):
             query = query.where(Game.scheduled_at.between(day_start, day_end))
 
         # Count total
-        count_result = await self.db.execute(select(func.count(Game.id)).select_from(query))
+        count_result = await self.db.execute(select(func.count()).select_from(query.subquery()))
         total = count_result.scalar() or 0
 
         # Fetch with pagination
