@@ -247,9 +247,9 @@ async def create_confirm(callback_query: CallbackQuery, state: FSMContext) -> No
             data = await state.get_data()
 
             # Create game
-            from app.schemas.game import CreateGameDTO
+            from app.schemas.game import CreateGameRequest
 
-            dto = CreateGameDTO(
+            dto = CreateGameRequest(
                 location=data.get("location"),
                 scheduled_at=data.get("datetime"),
                 format=GameFormat(data.get("format")),
