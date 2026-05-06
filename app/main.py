@@ -91,12 +91,22 @@ def create_app() -> FastAPI:
             app.state.dp = dp
 
             if settings.webhook_url:
+                import os
+                from aiogram.types import FSInputFile
+
                 base = settings.webhook_url.rstrip("/")
                 if not base.startswith("https://"):
                     base = f"https://{base}"
                 webhook_endpoint = f"{base}/webhook/telegram"
-                await bot.set_webhook(webhook_endpoint)
-                logger.info("Telegram webhook registered: %s", webhook_endpoint)
+
+                cert_path = "/app/certs/tennis-match.crt"
+                if os.path.exists(cert_path):
+                    certificate = FSInputFile(cert_path)
+                    await bot.set_webhook(webhook_endpoint, certificate=certificate)
+                    logger.info("Telegram webhook registered with certificate: %s", webhook_endpoint)
+                else:
+                    await bot.set_webhook(webhook_endpoint)
+                    logger.info("Telegram webhook registered (no certificate): %s", webhook_endpoint)
             else:
                 # Fallback: delete any stale webhook so polling works in dev
                 await bot.delete_webhook(drop_pending_updates=True)
