@@ -39,6 +39,15 @@ async def wallet_show(callback_query: CallbackQuery) -> None:
             wallet_repo = WalletRepository(session)
 
             db_user = await user_repo.get_by_telegram_id(telegram_id)
+            if db_user is None:
+                db_user = await user_repo.create(
+                    telegram_id=telegram_id,
+                    name=user.first_name or f"User {telegram_id}",
+                    level="BEGINNER",
+                )
+                await wallet_repo.get_or_create_for_user(db_user.id)
+                await session.commit()
+
             wallet = await wallet_repo.get_by_user_id(db_user.id)
 
             balance = float(wallet.balance)
@@ -142,6 +151,15 @@ async def wallet_history(callback_query: CallbackQuery) -> None:
             transaction_repo = TransactionRepository(session)
 
             db_user = await user_repo.get_by_telegram_id(telegram_id)
+            if db_user is None:
+                db_user = await user_repo.create(
+                    telegram_id=telegram_id,
+                    name=user.first_name or f"User {telegram_id}",
+                    level="BEGINNER",
+                )
+                await wallet_repo.get_or_create_for_user(db_user.id)
+                await session.commit()
+
             wallet = await wallet_repo.get_by_user_id(db_user.id)
 
             # Get transactions

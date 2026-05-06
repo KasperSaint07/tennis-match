@@ -235,6 +235,13 @@ async def create_confirm(callback_query: CallbackQuery, state: FSMContext) -> No
             game_service = build_game_service(session)
 
             db_user = await user_repo.get_by_telegram_id(telegram_id)
+            if db_user is None:
+                await callback_query.answer(
+                    "❌ Please send /start first to register.",
+                    show_alert=True,
+                )
+                await state.clear()
+                return
 
             # Get data
             data = await state.get_data()
@@ -258,6 +265,8 @@ async def create_confirm(callback_query: CallbackQuery, state: FSMContext) -> No
                 level=dto.level,
                 price_per_player=dto.price_per_player,
             )
+
+            await session.commit()
 
             text = (
                 f"✅ <b>Game Created!</b>\n\n"

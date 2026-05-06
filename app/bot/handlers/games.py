@@ -24,9 +24,9 @@ GAMES_PAGE_SIZE = 10
 
 def _format_game_text(game, current_players: int, max_players: int, is_joined: bool = False) -> str:
     """Format game details as text."""
-    level = game.level.value
-    format_type = game.format.value
-    status = game.status.value
+    level = game.level.value if hasattr(game.level, "value") else game.level
+    format_type = game.format.value if hasattr(game.format, "value") else game.format
+    status = game.status.value if hasattr(game.status, "value") else game.status
     participants_info = f"{current_players}/{max_players} players"
 
     if is_joined:
