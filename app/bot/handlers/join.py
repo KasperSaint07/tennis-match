@@ -51,7 +51,7 @@ async def game_join(callback_query: CallbackQuery) -> None:
                 "<b>Successfully joined!</b>\n\n"
                 f"Charged: {float(result['amount_charged'])} KZT\n"
                 f"Balance: {float(result['wallet_balance_after'])} KZT\n\n"
-                f"Game status: {game.status.value}\n"
+                f"Game status: {game.status.value if hasattr(game.status, 'value') else game.status}\n"
                 f"Players: {current_players}/{game.max_players}\n\n"
                 f"{game.location}\n"
                 f"{game.scheduled_at.strftime('%d.%m.%Y %H:%M')}"

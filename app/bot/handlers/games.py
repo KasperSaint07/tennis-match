@@ -76,16 +76,19 @@ async def games_list(callback_query: CallbackQuery) -> None:
             for i, game in enumerate(games, 1):
                 current = await participant_repo.count_active(game.id)
                 max_players = game.max_players
-                text += f"{i}. /{i} {game.level.value} {game.format.value} — {game.scheduled_at.strftime('%d.%m %H:%M')}\n"
+                lvl = game.level.value if hasattr(game.level, "value") else game.level
+                fmt = game.format.value if hasattr(game.format, "value") else game.format
+                text += f"{i}. /{i} {lvl} {fmt} — {game.scheduled_at.strftime('%d.%m %H:%M')}\n"
 
             text += f"\n💡 Select a game to see details or join.\n\nShowing {offset + 1}-{min(offset + GAMES_PAGE_SIZE, total)} of {total}"
 
             # Create inline buttons for each game
             buttons = []
             for i, game in enumerate(games, 1):
+                lvl = game.level.value if hasattr(game.level, "value") else game.level
                 buttons.append([
                     {
-                        "text": f"{i}. {game.level.value}",
+                        "text": f"{i}. {lvl}",
                         "callback_data": f"game:show:{game.id}",
                     }
                 ])
